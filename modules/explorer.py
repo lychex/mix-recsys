@@ -1,19 +1,12 @@
 # This module is used to transform json files into structured dataframe
-
-from scipy.sparse import coo_matrix
-from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.feature_extraction.text import CountVectorizer
 import json
 import os
 import re
 
-import nltk
 import numpy as np
 import pandas as pd
-from nltk.corpus import stopwords
-from nltk.stem.porter import PorterStemmer
-from nltk.stem.wordnet import WordNetLemmatizer
-from nltk.tokenize import RegexpTokenizer
+
+from utils import *
 
 
 def retrieve_files(path):
@@ -42,39 +35,10 @@ def combine_data(path):
     return user_df
 
 
-def remove(col, df):
-    df.drop(columns=col, axis=1, inplace=True)
-
-
 def duplicate_session_count(df, num_col_name):
     new_df = df.loc[df.index.repeat(df[num_col_name])]
     new_df.drop(columns=num_col_name, axis=1, inplace=True)
     return new_df
-
-
-def flatten_list(nested_list):
-    """Converts a nested list to a flat list"""
-    flat_list = []
-    for item in nested_list:
-        if isinstance(item, list):
-            flat_list.extend(flatten_list(item))
-        else:
-            flat_list.append(item)
-    return flat_list
-
-
-def sort_tuple(tup):
-    return(sorted(tup, key=lambda x: x[1]))
-
-
-def sort_dict(dic, reverse=True):
-    return sorted(dic.items(), key=lambda x: x[1], reverse=reverse)
-
-
-# Function for sorting tf_idf in descending order
-def sort_matrix(coo_matrix):
-    tuples = zip(coo_matrix.col, coo_matrix.data)
-    return sorted(tuples, key=lambda x: (x[1], x[0]), reverse=True)
 
 
 def transform_data(json_data, *args):
@@ -141,40 +105,6 @@ def transform_data(json_data, *args):
     user_df['page'] = "|".join(interested_page)
     user_df['action'] = "|".join(interested_action)
     return user_df
-
-
-def clean_page_col(df, col_name='page'):
-    content = df[['uid', col_name]]
-    content = content.drop_duplicates().reset_index()
-    pages = list()
-    category = list()
-    for i in range(len(content)):
-        # Split content for each users
-        eles = [eles for eles in content[col_name].iloc[i].split('|')]
-        # Unify the dash symbol and use it as delimiter to split the category
-        user_content = [ele.replace('—', '-').strip().split('-')
-                        for ele in eles]
-        # Extract content user interested in
-        top = [ele[:-1] for ele in user_content]
-        # Join strings that are unnecessarily split
-        top = [['-'.join(ele)] if len(ele) > 1 else ele for ele in top]
-        # Extract the category
-        cat = [ele[-1] for ele in user_content]
-
-        # Flatten the list and strip whitespace
-        top = flatten_list(top)
-        top = [ele.strip() for ele in top]
-        cat = [ele.strip() for ele in cat]
-
-        # User id
-        uid = content['uid'].iloc[i]
-
-        # Append individual user's content to the group
-        pages.extend(zip([uid] * len(top), top))
-        category.extend(cat)
-
-    page_df = pd.DataFrame(pages, columns=['uid', 'page'])
-    return page_df
 
 
 def convert_to_secs(duration):
@@ -384,3 +314,68 @@ def combine_journey_data(path):
     return user_df
 
 
+def clean_page_col(df, col_name='page'):
+    content = df[['uid', col_name]]
+    content = content.drop_duplicates().reset_index()
+    pages = list()
+    category = list()
+    for i in range(len(content)):
+        # Split content for each users
+        eles = [eles for eles in content[col_name].iloc[i].split('|')]
+        # Unify the dash symbol and use it as delimiter to split the category
+        user_content = [ele.replace('—', '-').strip().split('-')
+                        for ele in eles]
+        # Extract content user interested in
+        top = [ele[:-1] for ele in user_content]
+        # Join strings that are unnecessarily split
+        top = [['-'.join(ele)] if len(ele) > 1 else ele for ele in top]
+        # Extract the category
+        cat = [ele[-1] for ele in user_content]
+
+        # Flatten the list and strip whitespace
+        top = flatten_list(top)
+        top = [ele.strip() for ele in top]
+        cat = [ele.strip() for ele in cat]
+
+        if top == []:
+            top.append('NaN')
+        else:
+            top = top
+
+        # User id
+        uid = content['uid'].iloc[i]
+
+        # Append individual user's content to the group
+        pages.extend(zip([uid] * len(top), top))
+        category.extend(cat)
+
+    page_df = pd.DataFrame(pages, columns=['uid', 'page'])
+    return page_df
+
+
+def clean_page(df, col_name='page'):
+    """Clean pages without hyphen"""
+    content = df[['uid', col_name]]
+    content = content.drop_duplicates().reset_index()
+    pages = list()
+    category = list()
+    for i in range(len(content)):
+        # Split content for each users
+        eles = [eles for eles in content[col_name].iloc[i].split('|')]
+
+        # Flatten the list and strip whitespace
+        top = flatten_list(eles)
+
+        if top == []:
+            top.append('NaN')
+        else:
+            top = top
+
+        # User id
+        uid = content['uid'].iloc[i]
+
+        # Append individual user's content to the group
+        pages.extend(zip([uid] * len(top), top))
+
+    page_df = pd.DataFrame(pages, columns=['uid', 'page'])
+    return page_df
