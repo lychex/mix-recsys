@@ -1,9 +1,9 @@
 import json
 import os
-import re
 
 import numpy as np
 import pandas as pd
+import itertools as it
 
 from utils import *
 
@@ -179,3 +179,98 @@ class GAData():
                 df_list.append(df)
         user_df = pd.concat(df_list, axis=0, ignore_index=True)
         return user_df
+
+
+class PageData():
+    def __init__(self, basic_data):
+        self.data = basic_data
+        self.groupOne = self._clean_page_col()
+        self.mask = self.data[self.data['uid'].isin(self.groupOne[self.groupOne['page'] 
+                                                                == 'NaN']['uid'])]
+        self.groupTwo = self._adjust_page()
+
+    def _clean_page_col(self):
+        content = self.data[['uid', 'page']]
+        content = content.drop_duplicates().reset_index()
+        pages = list()
+        category = list()
+        for i in range(len(content)):
+            # Split content for each users
+            eles = [eles for eles in content['page'].iloc[i].split('|')]
+            # Unify the dash symbol and use it as delimiter to split the category
+            user_content = [ele.replace('—', '-').strip().split('-')
+                            for ele in eles]
+            # Extract content user interested in
+            top = [ele[:-1] for ele in user_content]
+            # Join strings that are unnecessarily split
+            top = [['-'.join(ele)] if len(ele) > 1 else ele for ele in top]
+            # Extract the category
+            cat = [ele[-1] for ele in user_content]
+
+            # Flatten the list and strip whitespace
+            top = flatten_list(top)
+            top = [ele.strip() for ele in top]
+            cat = [ele.strip() for ele in cat]
+            
+            if top == []:
+                top.append('NaN')
+            else:
+                top=top
+
+            # User id
+            uid = content['uid'].iloc[i]
+
+            # Append individual user's content to the group
+            pages.extend(zip([uid] * len(top), top))
+            category.extend(cat)
+
+        page_df = pd.DataFrame(pages, columns=['uid', 'page'])
+        return page_df
+
+    def _adjust_page(self):
+        """Clean pages without hyphen"""
+        content = self.mask[['uid', 'page']]
+        content = content.drop_duplicates().reset_index()
+        pages = list()
+
+        for i in range(len(content)):
+            # Split content for each users
+            eles = [eles for eles in content['page'].iloc[i].split('|')]
+
+            # Flatten the list and strip whitespace
+            top = flatten_list(eles)
+
+            if top == []:
+                top.append('NaN')
+            else:
+                top=top
+
+            # User id
+            uid = content['uid'].iloc[i]
+
+            # Append individual user's content to the group
+            pages.extend(zip([uid] * len(top), top))
+
+        page_df = pd.DataFrame(pages, columns=['uid', 'page'])
+        return page_df
+
+    @property
+    def cleaned(self):
+        page_df = pd.concat([self.groupOne, self.groupTwo], axis=0)
+        page_df['page'].replace('NaN', np.nan, inplace=True)
+        page_df.dropna(subset=['page'], inplace=True)
+        page_df = page_df.reset_index(drop=True)
+        return page_df
+
+    def _find_page_pairs(self, x):
+        pairs = pd.DataFrame(list(it.permutations(x.values, 2)), columns=['page', 'related page'])
+        return pairs
+
+
+    def get_page_combinations(self):
+        page_combinations = self.cleaned.groupby('uid')['page'].apply(self._find_page_pairs)
+        combination_counts = page_combinations.groupby(['page', 'related page']).size()
+        combination_counts_df = combination_counts.to_frame(name='size').reset_index()
+        combination_counts_df.sort_values('size', ascending=False, inplace=True)
+        return combination_counts_df
+
