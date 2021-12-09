@@ -261,7 +261,7 @@ class PageData():
         page_df = pd.concat([self.groupOne, self.groupTwo], axis=0)
         page_df['page'].replace('NaN', np.nan, inplace=True)
         page_df.dropna(subset=['page'], inplace=True)
-        page_df = page_df.reset_index(drop=True)
+        page_df = page_df.reset_index()
         return page_df
 
     def _find_page_pairs(self, x):
@@ -277,31 +277,30 @@ class PageData():
         return combination_counts_df
 
 
-# Import the catalog to add tags on each category
-with open('D:\\Github\\mix-recsys\\static\\article.txt', 'r') as reader:
-    article_dict = json.loads(reader.read())
 
-with open('D:\\Github\\mix-recsys\\static\\support.txt', 'r') as reader:
-    support_dict = json.loads(reader.read())
-    
-with open('D:\\Github\\mix-recsys\\static\\story.txt', 'r') as reader:
-    story_dict = json.loads(reader.read())
-    
-with open('D:\\Github\\mix-recsys\\static\\app.txt', 'r') as reader:
-    app_dict = json.loads(reader.read())
-    
-with open('D:\\Github\\mix-recsys\\static\\skill.txt', 'r') as reader:
-    skill_dict = json.loads(reader.read())
-    
-with open('D:\\Github\\mix-recsys\\static\\volunteer.txt', 'r') as reader:
-    volunteer_dict = json.loads(reader.read())
-    
-with open('D:\\Github\\mix-recsys\\static\\news.txt', 'r') as reader:
-    news_dict = json.loads(reader.read())
 
 class ActivityData():
+    # Import the catalog to add tags on each category
+    with open('D:\\Github\\mix-recsys\\static\\article.txt', 'r') as reader:
+        article_dict = json.loads(reader.read())
 
-
+    with open('D:\\Github\\mix-recsys\\static\\support.txt', 'r') as reader:
+        support_dict = json.loads(reader.read())
+        
+    with open('D:\\Github\\mix-recsys\\static\\story.txt', 'r') as reader:
+        story_dict = json.loads(reader.read())
+        
+    with open('D:\\Github\\mix-recsys\\static\\app.txt', 'r') as reader:
+        app_dict = json.loads(reader.read())
+        
+    with open('D:\\Github\\mix-recsys\\static\\skill.txt', 'r') as reader:
+        skill_dict = json.loads(reader.read())
+        
+    with open('D:\\Github\\mix-recsys\\static\\volunteer.txt', 'r') as reader:
+        volunteer_dict = json.loads(reader.read())
+        
+    with open('D:\\Github\\mix-recsys\\static\\news.txt', 'r') as reader:
+        news_dict = json.loads(reader.read())
 
     ARTICLE_DICT = article_dict
     MERGED_DICT = {**support_dict, **story_dict, **app_dict, **skill_dict, 
@@ -312,7 +311,7 @@ class ActivityData():
         self.sorted_data = self._sort_page_df()
         self.user_article = self._get_article_df()
         self.article = self._count_article_by_cat()
-        self.other = self._get_article_df()
+        self.other = self._get_activity_df()
 
     
 
@@ -401,8 +400,8 @@ class ActivityData():
             user_content = set(self.sorted_data.iloc[i])
 
             user_list = []
-            for cat in list(ActivityData.merged_dict.keys()):
-                kwords = ActivityData.merged_dict[cat]
+            for cat in list(ActivityData.MERGED_DICT.keys()):
+                kwords = ActivityData.MERGED_DICT[cat]
                 kword_num = self._count_keywords(kwords, user_content)
                 user_list.append(kword_num)
 
@@ -412,7 +411,7 @@ class ActivityData():
 
     @property
     def cleaned(self):
-        return self.other.insert(0, 'expert article', self.article)
+        self.other.insert(0, 'expert article', self.article)
+        return self.other
 
 
-print(article_dict)

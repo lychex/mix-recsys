@@ -45,12 +45,3 @@ def move_last_col_first(df):
     df_new = df[cols]
     return df_new
 
-
-def clean_text(x):
-    import re
-    x = re.sub('[^a-zA-Z]', ' ', x)
-    # Convert to lowercase
-    x = x.lower()
-    # Remove whitespace
-    x = x.strip()
-    return x
