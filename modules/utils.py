@@ -1,5 +1,3 @@
-
-
 def remove(col, df):
     df.drop(columns=col, axis=1, inplace=True)
 
@@ -46,3 +44,13 @@ def move_last_col_first(df):
     cols = [cols[-1]] + cols[:-1]
     df_new = df[cols]
     return df_new
+
+
+def clean_text(x):
+    import re
+    x = re.sub('[^a-zA-Z]', ' ', x)
+    # Convert to lowercase
+    x = x.lower()
+    # Remove whitespace
+    x = x.strip()
+    return x

@@ -1,5 +1,7 @@
 import json
 import os
+import re
+import sys
 
 import numpy as np
 import pandas as pd
@@ -274,3 +276,143 @@ class PageData():
         combination_counts_df.sort_values('size', ascending=False, inplace=True)
         return combination_counts_df
 
+
+# Import the catalog to add tags on each category
+with open('D:\\Github\\mix-recsys\\static\\article.txt', 'r') as reader:
+    article_dict = json.loads(reader.read())
+
+with open('D:\\Github\\mix-recsys\\static\\support.txt', 'r') as reader:
+    support_dict = json.loads(reader.read())
+    
+with open('D:\\Github\\mix-recsys\\static\\story.txt', 'r') as reader:
+    story_dict = json.loads(reader.read())
+    
+with open('D:\\Github\\mix-recsys\\static\\app.txt', 'r') as reader:
+    app_dict = json.loads(reader.read())
+    
+with open('D:\\Github\\mix-recsys\\static\\skill.txt', 'r') as reader:
+    skill_dict = json.loads(reader.read())
+    
+with open('D:\\Github\\mix-recsys\\static\\volunteer.txt', 'r') as reader:
+    volunteer_dict = json.loads(reader.read())
+    
+with open('D:\\Github\\mix-recsys\\static\\news.txt', 'r') as reader:
+    news_dict = json.loads(reader.read())
+
+class ActivityData():
+
+
+
+    ARTICLE_DICT = article_dict
+    MERGED_DICT = {**support_dict, **story_dict, **app_dict, **skill_dict, 
+                    **volunteer_dict, **news_dict}
+
+    def __init__(self, page_df):
+        self.data = page_df
+        self.sorted_data = self._sort_page_df()
+        self.user_article = self._get_article_df()
+        self.article = self._count_article_by_cat()
+        self.other = self._get_article_df()
+
+    
+
+    def _tidy_text(self):
+        new_text = []
+        for i in range(len(self.data)):
+            text = re.sub('[^a-zA-Z]', ' ', self.data['page'][i])
+            # Convert to lowercase
+            text = text.lower()
+            # Remove whitespace at the beginning or end of the text
+            text = text.strip()
+            if len(re.findall(r'\w+', text)) >= 0:
+                text = text
+            else:
+                text = np.nan
+            new_text.append(text)
+        return new_text
+
+
+    def _sort_page_df(self):
+        self.data['page'] = self._tidy_text()
+        page_sorted = self.data.groupby('uid')['page'].apply(list)
+        return page_sorted
+
+    
+    def _get_article_df(self):
+        user_df = pd.DataFrame(index = list(ActivityData.ARTICLE_DICT.keys()))
+        
+        for i in range(len(self.sorted_data)):
+            user_id = self.sorted_data.index[i]
+            user_content = set(self.sorted_data.iloc[i])
+
+            user_list = []
+            for _, page in enumerate(list(ActivityData.ARTICLE_DICT.keys())):
+                search = user_content.intersection(set(ActivityData.ARTICLE_DICT[page]))
+                user_cat = len(search)
+                user_list.append(user_cat)
+            user_df[user_id] = user_list
+            user_article = user_df.T
+    #         user_article.columns = user_article.columns.map(lambda x: ("_").join(x.split()))
+        return user_article
+
+    def _count_article_by_cat(self):
+        article_cat = ['sex_relation', 'body', 'mental', 'drink_drug', 'housing',
+                    'money', 'work_study', 'crime_safety', 'travel_lifestyle']
+        # the first 16 columns containing sex_relation subtopics
+        count_sex_relation = self.user_article.apply(
+            lambda x: (x[:][:16]).sum(), axis=1)
+        # column 16-23 containing body subtopics
+        count_body = self.user_article.apply(lambda x: (x[:][16:24]).sum(), axis=1)
+        # column 24-36 containing mental health subtopics
+        count_mental = self.user_article.apply(lambda x: (x[:][24:37]).sum(), axis=1)
+        # column 37-44 containing drink and drug subtopics
+        count_drink_drug = self.user_article.apply(
+            lambda x: (x[:][37:45]).sum(), axis=1)
+        # column 45-50 containing housing subtopics
+        count_housing = self.user_article.apply(lambda x: (x[:][45:51]).sum(), axis=1)
+        # column 51-59 containing money subtopics
+        count_money = self.user_article.apply(lambda x: (x[:][51:60]).sum(), axis=1)
+        # column 60-72 containing work and study subtopics
+        count_work = self.user_article.apply(lambda x: (x[:][60:73]).sum(), axis=1)
+        # column 73-78 containing crime and safety subtopics
+        count_crime = self.user_article.apply(lambda x: (x[:][73:78]).sum(), axis=1)
+        # column 78-83 containing travel and lifestyle subtopics
+        count_travel = self.user_article.apply(lambda x: (x[:][78:]).sum(), axis=1)
+
+        count_df = pd.concat([count_sex_relation, count_body, count_mental, count_drink_drug,
+                            count_housing, count_money, count_work, count_crime, count_travel], axis=1)
+        count_df.columns = article_cat
+        return count_df.sum(axis=1).to_frame().rename(columns={0:'expert article'})
+
+ 
+    def _count_keywords(self, kwords, user_content): 
+        count_list = []
+        for kword in kwords:
+            for doc in user_content:
+                if doc.find(kword) != -1:
+                    count_list.append(doc)
+        return len(count_list)  
+
+
+    def _get_activity_df(self):
+        user_df = pd.DataFrame(index=list(ActivityData.MERGED_DICT.keys()))
+        for i in range(len(self.sorted_data)):
+            user_id = self.sorted_data.index[i]
+            user_content = set(self.sorted_data.iloc[i])
+
+            user_list = []
+            for cat in list(ActivityData.merged_dict.keys()):
+                kwords = ActivityData.merged_dict[cat]
+                kword_num = self._count_keywords(kwords, user_content)
+                user_list.append(kword_num)
+
+            user_df[user_id] = user_list
+    
+        return user_df.T
+
+    @property
+    def cleaned(self):
+        return self.other.insert(0, 'expert article', self.article)
+
+
+print(article_dict)

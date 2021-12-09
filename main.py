@@ -5,7 +5,7 @@ import pandas as pd
 
 
 sys.path.append('./modules')
-from gadata import *
+from data import *
 
 
 DATA_PATH = './databases/json-data/'
