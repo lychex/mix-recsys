@@ -3,7 +3,7 @@ import json
 
 
 
-sys.path.append('./scripts/1.webscrape/modules')
+sys.path.append('./scripts/1.webScrape/modules')
 # from data import *
 from scrape import *
 

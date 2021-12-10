@@ -1,4 +1,5 @@
 {
     "python.analysis.extraPaths": [
-        "./scripts/0.extractGAdata/modules", "./scripts/1.webscrape/modules"    ]
+        "./scripts/0.extractGAdata/modules", "./scripts/1.webScrape/modules",
+        "./scripts/2.dataPrep/modules", "./notebooks/modules"  ]
 }

@@ -281,25 +281,25 @@ class PageData():
 
 class ActivityData():
     # Import the catalog to add tags on each category
-    with open('D:\\Github\\mix-recsys\\static\\article.txt', 'r') as reader:
+    with open('D:\\Github\\mix-recsys\\databases\\static\\article.txt', 'r') as reader:
         article_dict = json.loads(reader.read())
 
-    with open('D:\\Github\\mix-recsys\\static\\support.txt', 'r') as reader:
+    with open('D:\\Github\\mix-recsys\\databases\\static\\support.txt', 'r') as reader:
         support_dict = json.loads(reader.read())
         
-    with open('D:\\Github\\mix-recsys\\static\\story.txt', 'r') as reader:
+    with open('D:\\Github\\mix-recsys\\databases\\static\\story.txt', 'r') as reader:
         story_dict = json.loads(reader.read())
         
-    with open('D:\\Github\\mix-recsys\\static\\app.txt', 'r') as reader:
+    with open('D:\\Github\\mix-recsys\\databases\\static\\app.txt', 'r') as reader:
         app_dict = json.loads(reader.read())
         
-    with open('D:\\Github\\mix-recsys\\static\\skill.txt', 'r') as reader:
+    with open('D:\\Github\\mix-recsys\\databases\\static\\skill.txt', 'r') as reader:
         skill_dict = json.loads(reader.read())
         
-    with open('D:\\Github\\mix-recsys\\static\\volunteer.txt', 'r') as reader:
+    with open('D:\\Github\\mix-recsys\\databases\\static\\volunteer.txt', 'r') as reader:
         volunteer_dict = json.loads(reader.read())
         
-    with open('D:\\Github\\mix-recsys\\static\\news.txt', 'r') as reader:
+    with open('D:\\Github\\mix-recsys\\databases\\static\\news.txt', 'r') as reader:
         news_dict = json.loads(reader.read())
 
     ARTICLE_DICT = article_dict
