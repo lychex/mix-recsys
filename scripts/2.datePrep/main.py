@@ -78,7 +78,10 @@ data_cleaned.to_csv('./databases/csv-data/cleaned.csv', index=False)
 #=====================================================================================
 # Create pageview feature by adding individual pages tags
 #=====================================================================================
+
+# Save cleaned user journey data
 data_cleaned = pd.read_csv('./databases/csv-data/cleaned.csv')
+print(f"Cleaned dataset shape:{data_cleaned.shape}")
 
 with open('./databases/static/article.txt', 'r') as reader:
     article_dict = json.loads(reader.read()) 
@@ -92,6 +95,6 @@ article_tag = data_cleaned.copy()[['pageURL', 'page']]
 article_tag['page'] = article_tag.page.map(clean_text)
 article_tag['tag'] = article_tag.page.map(functools.partial(tag_mapper, pairs=pairs))
 
-article_tag.to_csv('./databases/csv-data/article_tag.csv', index=False)
+# Save article tag data 
+article_tag.to_csv('./databases/csv-data/article_tag.csv', index=False) # will be used to build page feature
 
-print(data_cleaned.shape)
