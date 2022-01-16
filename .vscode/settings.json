@@ -2,8 +2,6 @@
     "python.analysis.extraPaths": [
         "./scripts/0.extractGAdata/modules",
         "./scripts/1.webScrape/modules",
-        "./scripts/2.genFeature/modules",
-        "./notebooks/modules",
         "./scripts/2.datePrep/modules"
     ]
 }
